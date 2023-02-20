@@ -120,7 +120,7 @@ valid_loader = DataLoader(
 )
 
 model = scEMD(d_model=15, n_labels=len(dataset.lable_dict), vocab_size=CLASS,
-              embedding_dim = 15, dim_feedforward = 10, nhead=1)
+              embedding_dim = 15, dim_feedforward = 10, nhead=1, num_layers=2)
 
 model.to(device)
 
@@ -142,10 +142,15 @@ for i in range(1, EPOCHS+1):
         gene_indexs, gene_exprs, cell_lables, pad_index = data
         gene_indexs, gene_exprs, cell_lables, pad_index = gene_indexs.to(device), gene_exprs.to(device), cell_lables.to(device), pad_index.to(device)
         gene_indexs_masked, mask_bool, gene_index_label = data_mask(gene_indexs, pad_index = pad_index, mask_prob = MASK_PROB, mask_token_id = MASK_TOKEN_ID, pad_token_id = PAD_TOKEN_ID, device = device)
-        logits = model(gene_indexs_masked, gene_exprs, padding_mask = pad_index | mask_bool)
-        loss = loss_fn(logits.view(logits.shape[0]*logits.shape[1],-1), gene_indexs.view(-1))
-        accuracy = torch.mean((logits.argmax(dim=-1) == gene_index_label).float())
+        gene_logits, cell_logits = model(gene_indexs_masked, gene_exprs, padding_mask = pad_index | mask_bool)
+        # mask gene predict
+        gene_loss = loss_fn(gene_logits.view(gene_logits.shape[0]*gene_logits.shape[1],-1), gene_indexs.view(-1))
+        gene_accuracy = torch.mean((gene_logits.argmax(dim=-1) == gene_index_label).float())
+        # cell predict
+        cell_loss = loss_fn(cell_logits, cell_lables)
+        cell_accuracy = torch.mean((cell_logits.argmax(dim=-1) == gene_index_label).float())
         # Updata model
+        loss = gene_loss + cell_loss
         loss.backward()
         optimizer.step()
         scheduler.step()
@@ -153,7 +158,7 @@ for i in range(1, EPOCHS+1):
 
         running_loss += loss.item()
 
-        live.update(f"EPOCH:{i}/{EPOCHS}, batch:{index}, accuracy:{accuracy:.4f}, epoch_loss:{epoch_loss:.4f}, loss:{loss:.4f}")
+        live.update(f"EPOCH:{i}/{EPOCHS}, batch:{index}:\n epoch_loss:{epoch_loss:.4f}, loss:{loss:.4f}\n gene_accuracy:{gene_accuracy:.4f}, gene_loss:{gene_loss:.4f} \n cell_accuracy:{cell_accuracy:.4f}, cell_loss:{cell_loss:.4f}")
     
     epoch_loss = running_loss / index
 

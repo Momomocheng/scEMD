@@ -92,7 +92,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class scEMD(nn.Module):
-    def __init__(self, d_model, n_labels, vocab_size, embedding_dim, dim_feedforward, nhead, dropout=0.1):
+    def __init__(self, d_model, n_labels, vocab_size, embedding_dim, dim_feedforward, nhead, num_layers, dropout=0.1):
         super().__init__()
         self.embedding_dim = embedding_dim
         # embedding for scEMD
@@ -100,7 +100,10 @@ class scEMD(nn.Module):
         # Encoder Part
         self.encoder_layer = TransformerEncoderLayer_Expr_Attention(
             d_model=d_model, dim_feedforward=dim_feedforward, nhead=nhead, dropout=dropout)
-        self.encoder = TransformerEncoder_Expr_Attention(self.encoder_layer, num_layers=2)
+        self.encoder = TransformerEncoder_Expr_Attention(self.encoder_layer, num_layers = num_layers)
+
+        # cell classify part
+        self.classifier = nn.Linear(d_model, n_labels)
 
     def forward(self, gene_indexs, gene_exprs, padding_mask, return_gene_encoded = False):
         """
@@ -127,12 +130,15 @@ class scEMD(nn.Module):
         # gene_encoded: (batch size, length, d_model)
         gene_encoded = gene_encoded.transpose(0, 1)
 
-        if return_gene_encoded is True:
-            return gene_encoded
-
-        # pred_gene_index: ((batch size, length, vocab_size))
+        # pred_gene_index: (batch size, length, vocab_size)
         pred_gene_index = gene_encoded @ self.embedding.weight.t()
 
-        return pred_gene_index
+        # predict cell type
+        # average pooling
+        # cell_encoded:(batch size, d_model)
+        cell_encoded = torch.mean(gene_encoded, dim=1)
+        pred_cell_labels = self.classifier(cell_encoded)
+
+        return pred_gene_index, pred_cell_labels
     
 

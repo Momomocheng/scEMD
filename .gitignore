@@ -6,5 +6,5 @@ model/
 notebooks_xg/  
 plot_adata_feature/
 *.ipynb
-./src/__pycache__/
-./vscode/
+src/__pycache__/
+.vscode/

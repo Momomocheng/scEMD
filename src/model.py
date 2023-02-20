@@ -6,7 +6,7 @@ class TransformerEncoderLayer_Expr_Attention(Module):
 
     def __init__(self, d_model, nhead, dim_feedforward, dropout=0.1, activation="relu"):
         super(TransformerEncoderLayer_Expr_Attention, self).__init__()
-        self.self_attn = MultiheadAttention(d_model, nhead, dropout=dropout)
+        self.self_attn = MultiheadAttention(d_model, nhead, dropout=dropout, kdim=1)
         # Implementation of Feedforward model
         self.linear1 = Linear(d_model, dim_feedforward)
         self.dropout = Dropout(dropout)
@@ -35,7 +35,7 @@ class TransformerEncoderLayer_Expr_Attention(Module):
         Shape:
             see the docs in Transformer class.
         """
-        src2, attn_output_avg_weights = self.self_attn(src_expr, src, src, attn_mask=src_mask,
+        src2, attn_output_avg_weights = self.self_attn(src, src_expr, src, attn_mask=src_mask,
                               key_padding_mask=src_key_padding_mask)
         src = src + self.dropout1(src2)
         src = self.norm1(src)
@@ -113,7 +113,8 @@ class scEMD(nn.Module):
           out: (batch size, n_spks)
         """
         # gene_exprs: (batch size, length, embedding_dim)
-        gene_exprs = gene_exprs.repeat(self.embedding_dim, 1, 1).transpose(0, 1).transpose(1, 2)
+        # gene_exprs = gene_exprs.repeat(self.embedding_dim, 1, 1).transpose(0, 1).transpose(1, 2)
+        gene_exprs = gene_exprs.unsqueeze(-1)
         # gene_exprs: (length, batch size, embedding_dim)
         gene_exprs = gene_exprs.permute(1, 0, 2)
         # gene_embeddings: (batch size, length, embedding_dim)

@@ -35,7 +35,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--gene_num", type=int, default=26485, help='Number of genes.')
 parser.add_argument("--epoch", type=int, default=100, help='Number of epochs.')
 parser.add_argument("--seed", type=int, default=42, help='Random seed.')
-parser.add_argument("--batch_size", type=int, default=2, help='Number of batch size.')
+parser.add_argument("--batch_size", type=int, default=18, help='Number of batch size.')
 parser.add_argument("--n_workers", type=int, default=0, help='Number of dataloader workers.')
 parser.add_argument("--learning_rate", type=float, default=1e-3, help='Learning rate.')
 # parser.add_argument("--grad_acc", type=int, default=60, help='Number of gradient accumulation.')
@@ -46,7 +46,7 @@ parser.add_argument("--pos_embed", type=bool, default=True, help='Using Gene2vec
 parser.add_argument("--data_path", type=str, default='/home/xuguang/scEMD/data_backup/adata_HLCA_10X_60993_count.anno.h5ad', help='Path of data for pretraining.')
 parser.add_argument("--file_path", type=str, default='../saved_model/', help='Directory of checkpoint to save.')
 parser.add_argument("--model_name", type=str, default='HLCA_10X_pretrain', help='Pretrained model name.')
-parser.add_argument("--maxlength", type=str, default=100, help='max input length.')
+parser.add_argument("--maxlength", type=str, default=1000, help='max input length.')
 
 args = parser.parse_args([])
 
@@ -97,7 +97,10 @@ def collate_batch(batch, padding_value=PAD_TOKEN_ID, max_length=MAX_LENGTH):
         out_gene_indexs[i, :length, ...] = torch.from_numpy(tensor)
         out_gene_exprs[i, :length, ...] = torch.from_numpy(gene_exprs[i])
         pad_index[i, :length, ...] = False
-    return out_gene_indexs[:max_length], out_gene_exprs[:max_length], torch.FloatTensor(cell_lables).long()[:max_length], pad_index[:max_length]
+    if(max_length<max_len):
+        return out_gene_indexs[:,:max_length], out_gene_exprs[:,:max_length], torch.FloatTensor(cell_lables).long()[:max_length], pad_index[:,:max_length]
+    else:
+        return out_gene_indexs, out_gene_exprs, torch.FloatTensor(cell_lables).long(), pad_index
 
 train_loader = DataLoader(
     train_dataset,
@@ -120,8 +123,8 @@ valid_loader = DataLoader(
     # persistent_workers=True,
 )
 
-model = scEMD(d_model=15, n_labels=len(dataset.lable_dict), vocab_size=CLASS,
-              embedding_dim = 15, dim_feedforward = 10, nhead=1, num_layers=2)
+model = scEMD(d_model=100, n_labels=len(dataset.lable_dict), vocab_size=CLASS,
+              embedding_dim = 100, dim_feedforward = 100, nhead=2, num_layers=2)
 model = nn.DataParallel(model,device_ids=[0,1])
 model.to(device)
 

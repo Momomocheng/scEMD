@@ -28,14 +28,11 @@ from torch.optim import AdamW
 from tools import *
 from model import scEMD
 
-
-
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--gene_num", type=int, default=26485, help='Number of genes.')
 parser.add_argument("--epoch", type=int, default=100, help='Number of epochs.')
 parser.add_argument("--seed", type=int, default=42, help='Random seed.')
-parser.add_argument("--batch_size", type=int, default=32, help='Number of batch size.')
+parser.add_argument("--batch_size", type=int, default=2, help='Number of batch size.')
 parser.add_argument("--n_workers", type=int, default=32, help='Number of dataloader workers.')
 parser.add_argument("--learning_rate", type=float, default=1e-3, help='Learning rate.')
 # parser.add_argument("--grad_acc", type=int, default=60, help='Number of gradient accumulation.')
@@ -45,8 +42,8 @@ parser.add_argument("--mask_prob", type=float, default=0.15, help='Probability o
 parser.add_argument("--pos_embed", type=bool, default=True, help='Using Gene2vec encoding or not.')
 parser.add_argument("--data_path", type=str, default='/home/xuguang/scEMD/data_backup/adata_HLCA_10X_60993_count.anno.h5ad', help='Path of data for pretraining.')
 parser.add_argument("--file_path", type=str, default='../saved_model/', help='Directory of checkpoint to save.')
-parser.add_argument("--model_name", type=str, default='HLCA_10X_pretrain', help='Pretrained model name.')
-parser.add_argument("--maxlength", type=str, default=200, help='max input length.')
+parser.add_argument("--model_name", type=str, default='HLCA_10X_Finetune', help='Pretrained model name.')
+parser.add_argument("--maxlength", type=str, default=100, help='max input length.')
 
 args = parser.parse_args([])
 
@@ -61,15 +58,13 @@ CLASS = args.gene_num + 2
 MASK_TOKEN_ID = CLASS - 1
 PAD_TOKEN_ID = CLASS - 2
 POS_EMBED_USING = args.pos_embed
-
 N_WORKERS = args.n_workers
 MAX_LENGTH = args.maxlength
-
 model_name = args.model_name
 file_path = args.file_path
 
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-device = torch.device("cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cpu")
 
 dataset = scDataset()
 # 定义划分比例
@@ -123,7 +118,6 @@ model = scEMD(d_model=15, n_labels=len(dataset.lable_dict), vocab_size=CLASS,
 
 model.to(device)
 
-
 optimizer = AdamW(model.parameters(), lr=LEARNING_RATE)
 scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps = 1000, num_training_steps = EPOCHS * dataset.length / BATCH_SIZE)
 loss_fn = nn.CrossEntropyLoss(ignore_index = PAD_TOKEN_ID, reduction='mean')
@@ -141,28 +135,20 @@ for i in range(1, EPOCHS+1):
         index += 1
         gene_indexs, gene_exprs, cell_lables, pad_index = data
         gene_indexs, gene_exprs, cell_lables, pad_index = gene_indexs.to(device), gene_exprs.to(device), cell_lables.to(device), pad_index.to(device)
-        gene_indexs_masked, mask_bool, gene_index_label = data_mask(gene_indexs, pad_index = pad_index, mask_prob = MASK_PROB, mask_token_id = MASK_TOKEN_ID, pad_token_id = PAD_TOKEN_ID, device = device)
-        gene_logits, cell_logits = model(gene_indexs_masked, gene_exprs, padding_mask = pad_index | mask_bool)
-        # mask gene predict
-        gene_loss = loss_fn(gene_logits.view(gene_logits.shape[0]*gene_logits.shape[1],-1), gene_indexs.view(-1))
-        gene_accuracy = torch.mean((gene_logits.argmax(dim=-1) == gene_index_label).float())
+        # gene_indexs_masked, mask_bool, gene_index_label = data_mask(gene_indexs, pad_index = pad_index, mask_prob = MASK_PROB, mask_token_id = MASK_TOKEN_ID, pad_token_id = PAD_TOKEN_ID, device = device)
+        _, cell_logits = model(gene_indexs, gene_exprs, padding_mask = pad_index)
         # cell predict
-        cell_loss = loss_npair(cell_logits, cell_logits, cell_lables)
-        if cell_logits.shape[1] == len(dataset.lable_dict):
-            cell_accuracy = torch.mean((cell_logits.argmax(dim=-1) == cell_lables).float())
+        cell_loss = loss_fn(cell_logits, cell_lables)
+        cell_accuracy = torch.mean((cell_logits.argmax(dim=-1) == cell_lables).float())
         # Updata model
-        loss = gene_loss + cell_loss
+        loss = cell_loss
         loss.backward()
         optimizer.step()
         scheduler.step()
         optimizer.zero_grad()
 
         running_loss += loss.item()
-
-        if cell_logits.shape[1] == len(dataset.lable_dict):
-            live.update(f"EPOCH:{i}/{EPOCHS}, batch:{index}:\n epoch_loss:{epoch_loss:.4f}, loss:{loss:.4f}\n gene_accuracy:{gene_accuracy:.4f}, gene_loss:{gene_loss:.4f} \n cell_accuracy:{cell_accuracy:.4f}, cell_loss:{cell_loss:.4f}")
-        else:
-                        live.update(f"EPOCH:{i}/{EPOCHS}, batch:{index}:\n epoch_loss:{epoch_loss:.4f}, loss:{loss:.4f}\n gene_accuracy:{gene_accuracy:.4f}, gene_loss:{gene_loss:.4f} \n cell_accuracy:none, cell_loss:{cell_loss:.4f}")
+        live.update(f"EPOCH:{i}/{EPOCHS}, batch:{index}:\n epoch_loss:{epoch_loss:.4f}, loss:{loss:.4f}\n cell_accuracy:{cell_accuracy:.4f}, cell_loss:{cell_loss:.4f}")
     epoch_loss = running_loss / index
     #save model
     output_path = file_path + model_name + "_ep%d" % i + ".pth"
@@ -170,12 +156,4 @@ for i in range(1, EPOCHS+1):
     model.to(device)
 
 live.stop()
-
-
-
-
-
-
-
-
 

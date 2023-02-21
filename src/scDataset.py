@@ -9,15 +9,16 @@ import numpy as np
 import torch
 
 def read_all_adata():
-    E_MTAB_6149_19tumor_addmeta_10X_file = "/home/xuguang/sc_RNA_seq/DataMining/dataset/E_MTAB_6149_19tumor_addmeta.h5ad"
-    GSE131907_58ALL_LUAD_addmeta_10X_file = "/home/xuguang/sc_RNA_seq/DataMining/dataset/GSE131907_58ALL_LUAD_addmeta.h5ad"
-    GSE136831_78All_IPF_COPD_CTL_addmeta_10X_file = "/home/xuguang/sc_RNA_seq/DataMining/dataset/GSE136831_78All_IPF_COPD_CTL_addmeta.h5ad"
-    E_MTAB_8221_8fetal_addmeta_10X_file = "/home/xuguang/sc_RNA_seq/DataMining/dataset/E_MTAB_8221_8fetal_addmeta.h5ad"
-    GSE128169_13ALL_SSC_addmeta_10X_file = "/home/xuguang/sc_RNA_seq/DataMining/dataset/GSE128169_13ALL_SSC_addmeta.h5ad"
-    E_MTAB_6653_12tumor_addmeta_10X_file = "/home/xuguang/sc_RNA_seq/DataMining/dataset/E_MTAB_6653_12tumor_addmeta.h5ad"
-    GSE128033_18ALL_IPF_addmeta_10X_file = "/home/xuguang/sc_RNA_seq/DataMining/dataset/GSE128033_18ALL_IPF_addmeta.h5ad"
-    lungAtlasSmartSeq2_file = "/home/xuguang/scEMD/data_backup/Seurat3_ntiss_smartSeq2.anno.h5ad"
-    lungAtlas10X_file = "/home/xuguang/scEMD/data_backup/Seurat3_ntiss10x.anno.h5ad"
+    data_dir = "/home/xuguang/scEMD/data_backup/"
+    E_MTAB_6149_19tumor_addmeta_10X_file = data_dir + "E_MTAB_6149_19tumor_addmeta.h5ad"
+    GSE131907_58ALL_LUAD_addmeta_10X_file = data_dir + "GSE131907_58ALL_LUAD_addmeta.h5ad"
+    GSE136831_78All_IPF_COPD_CTL_addmeta_10X_file = data_dir + "GSE136831_78All_IPF_COPD_CTL_addmeta.h5ad"
+    E_MTAB_8221_8fetal_addmeta_10X_file = data_dir + "E_MTAB_8221_8fetal_addmeta.h5ad"
+    GSE128169_13ALL_SSC_addmeta_10X_file = data_dir + "GSE128169_13ALL_SSC_addmeta.h5ad"
+    E_MTAB_6653_12tumor_addmeta_10X_file = data_dir + "E_MTAB_6653_12tumor_addmeta.h5ad"
+    GSE128033_18ALL_IPF_addmeta_10X_file = data_dir + "GSE128033_18ALL_IPF_addmeta.h5ad"
+    lungAtlasSmartSeq2_file = data_dir + "Seurat3_ntiss_smartSeq2.anno.h5ad"
+    lungAtlas10X_file = data_dir + "Seurat3_ntiss10x.anno.h5ad"
 
     print("loading data" , flush=True)
 
@@ -53,7 +54,7 @@ class scDataset(Dataset):
         if datadir is not None:
             self.datadir = datadir
         else:
-            self.datadir = "/home/xuguang/scEMD/data_backup/adata_HLCA_10X_60993_count.anno.h5ad"
+            self.datadir = "/home/xuguang/scEMD/data_backup/Seurat3_ntiss10x.anno.h5ad"
         self.adata = sc.read(self.datadir)
         # self.adata = read_all_adata()
         self.length = self.adata.shape[0]

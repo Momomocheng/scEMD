@@ -46,7 +46,7 @@ parser.add_argument("--pos_embed", type=bool, default=True, help='Using Gene2vec
 parser.add_argument("--data_path", type=str, default='/home/xuguang/scEMD/data_backup/adata_HLCA_10X_60993_count.anno.h5ad', help='Path of data for pretraining.')
 parser.add_argument("--file_path", type=str, default='../saved_model/', help='Directory of checkpoint to save.')
 parser.add_argument("--model_name", type=str, default='HLCA_10X_pretrain', help='Pretrained model name.')
-parser.add_argument("--maxlength", type=str, default=200, help='max input length.')
+parser.add_argument("--maxlength", type=str, default=1000, help='max input length.')
 
 args = parser.parse_args([])
 
@@ -121,8 +121,8 @@ valid_loader = DataLoader(
     persistent_workers=True,
 )
 
-model = scEMD(d_model=15, n_labels=len(dataset.lable_dict), vocab_size=CLASS,
-              embedding_dim = 15, dim_feedforward = 10, nhead=1, num_layers=2)
+model = scEMD(d_model=100, n_labels=len(dataset.lable_dict), vocab_size=CLASS,
+              embedding_dim = 100, dim_feedforward = 100, nhead=2, num_layers=2)
 
 model.to(device)
 

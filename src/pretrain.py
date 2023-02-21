@@ -95,7 +95,10 @@ def collate_batch(batch, padding_value=PAD_TOKEN_ID, max_length=MAX_LENGTH):
         out_gene_indexs[i, :length, ...] = torch.from_numpy(tensor)
         out_gene_exprs[i, :length, ...] = torch.from_numpy(gene_exprs[i])
         pad_index[i, :length, ...] = False
-    return out_gene_indexs[:max_length], out_gene_exprs[:max_length], torch.FloatTensor(cell_lables).long()[:max_length], pad_index[:max_length]
+    if(max_length<max_len):
+        return out_gene_indexs[:,:max_length], out_gene_exprs[:,:max_length], torch.FloatTensor(cell_lables).long()[:max_length], pad_index[:,:max_length]
+    else:
+        return out_gene_indexs, out_gene_exprs, torch.FloatTensor(cell_lables).long(), pad_index
 
 train_loader = DataLoader(
     train_dataset,

@@ -7,9 +7,9 @@ import pandas as pd
 from collections import Counter
 import numpy as np
 import torch
+import config
 
-def read_all_adata():
-    data_dir = "/home/xuguang/scEMD/data_backup/"
+def read_all_adata(data_dir = config.data_dir):
     E_MTAB_6149_19tumor_addmeta_10X_file = data_dir + "E_MTAB_6149_19tumor_addmeta.h5ad"
     GSE131907_58ALL_LUAD_addmeta_10X_file = data_dir + "GSE131907_58ALL_LUAD_addmeta.h5ad"
     GSE136831_78All_IPF_COPD_CTL_addmeta_10X_file = data_dir + "GSE136831_78All_IPF_COPD_CTL_addmeta.h5ad"
@@ -17,8 +17,8 @@ def read_all_adata():
     GSE128169_13ALL_SSC_addmeta_10X_file = data_dir + "GSE128169_13ALL_SSC_addmeta.h5ad"
     E_MTAB_6653_12tumor_addmeta_10X_file = data_dir + "E_MTAB_6653_12tumor_addmeta.h5ad"
     GSE128033_18ALL_IPF_addmeta_10X_file = data_dir + "GSE128033_18ALL_IPF_addmeta.h5ad"
-    lungAtlasSmartSeq2_file = data_dir + "Seurat3_ntiss_smartSeq2.anno.h5ad"
-    lungAtlas10X_file = data_dir + "Seurat3_ntiss10x.anno.h5ad"
+    lungAtlasSmartSeq2_file = data_dir + "adata_HLCA_ss2_8545_count.anno.h5ad"
+    lungAtlas10X_file = data_dir + "adata_HLCA_10X_60993_count.anno.h5ad"
 
     print("loading data" , flush=True)
 

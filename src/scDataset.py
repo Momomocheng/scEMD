@@ -55,13 +55,17 @@ class scDataset(Dataset):
             self.datadir = datadir
         else:
             self.datadir = "/home/xuguang/scEMD/data_backup/Seurat3_ntiss10x.anno.h5ad"
-        self.adata = sc.read(self.datadir)
+        self.adata = sc.read_h5ad(self.datadir)
         # self.adata = read_all_adata()
         self.length = self.adata.shape[0]
         self.vocab_size = self.adata.shape[1]
         self.gene_list = np.array(self.adata.var_names)
         self.padding_value = len(self.gene_list) + 1
-        self.lable_dict, self.lables = np.unique(np.array(self.adata.obs['cell_type']), return_inverse=True)
+        if 'cell_type' in self.adata.obs.columns:
+            self.lable_dict, self.lables = np.unique(np.array(self.adata.obs['cell_type']), return_inverse=True)
+        else: 
+            self.lables = np.array(self.adata.obs['leiden'],dtype=int)
+            self.lable_dict = list(range(57))
 
     def __len__(self):
         return self.length

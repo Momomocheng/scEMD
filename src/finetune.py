@@ -44,6 +44,8 @@ parser.add_argument("--data_path", type=str, default='/home/xuguang/scEMD/data_b
 parser.add_argument("--file_path", type=str, default='../saved_model/', help='Directory of checkpoint to save.')
 parser.add_argument("--model_name", type=str, default='HLCA_10X_Finetune', help='Pretrained model name.')
 parser.add_argument("--maxlength", type=str, default=1000, help='max input length.')
+parser.add_argument("--model_path", type=str, 
+                    default="/home/xuguang/scEMD/saved_model/HLCA_10X_pretrain_ep22.pth", help='pretrained model path')
 
 args = parser.parse_args([])
 
@@ -118,8 +120,9 @@ valid_loader = DataLoader(
     # persistent_workers=True,
 )
 
-model = scEMD(d_model=100, n_labels=len(dataset.lable_dict), vocab_size=CLASS,
-              embedding_dim = 100, dim_feedforward = 100, nhead=2, num_layers=2)
+model = torch.load(args.model_path)
+# model = scEMD(d_model=100, n_labels=len(dataset.lable_dict), vocab_size=CLASS,
+#               embedding_dim = 100, dim_feedforward = 100, nhead=2, num_layers=2)
 # model = nn.DataParallel(model,device_ids=[0,1])
 model.to(device)
 
@@ -156,7 +159,9 @@ for i in range(1, EPOCHS+1):
         live.update(f"EPOCH:{i}/{EPOCHS}, batch:{index}:\n epoch_loss:{epoch_loss:.4f}, loss:{loss:.4f}\n cell_accuracy:{cell_accuracy:.4f}, cell_loss:{cell_loss:.4f}")
     epoch_loss = running_loss / index
     #save model
-    output_path = file_path + model_name + "_ep%d" % i + ".pth"
+    if not os.path.exists(file_path + model_name):
+        os.mkdir(file_path + model_name)
+    output_path = file_path + model_name + "/ep%d" % i + ".pth"
     torch.save(model.cpu(),output_path)
     model.to(device)
 

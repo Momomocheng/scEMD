@@ -44,7 +44,7 @@ adata_lungAtlas10X.obs["sample_name_for_split"] = adata_lungAtlas10X.obs["sample
 
 outer = ad.concat([E_MTAB_6149_19tumor_addmeta_10X, GSE131907_58ALL_LUAD_addmeta_10X, GSE136831_78All_IPF_COPD_CTL_addmeta_10X,
                     E_MTAB_8221_8fetal_addmeta_10X, GSE128169_13ALL_SSC_addmeta_10X, E_MTAB_6653_12tumor_addmeta_10X, GSE128033_18ALL_IPF_addmeta_10X, 
-                    adata_lungAtlasSmartSeq2, adata_lungAtlas10X], join="outer")
+                    adata_lungAtlasSmartSeq2, adata_lungAtlas10X], join="inner")
 print("loaded data" , flush=True)
 
 # 按照sample列进行拆分
@@ -61,20 +61,29 @@ def calculate_leiden_clusters(adata):
     if not "log1p" in adata.uns_keys():
         sc.pp.log1p(adata)
     sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
-    sc.pp.regress_out(adata, ['total_counts', 'pct_counts_mt'])
+    # sc.pp.regress_out(adata, ['total_counts', 'pct_counts_mt'])
     sc.pp.scale(adata, max_value=10)
     sc.tl.pca(adata, svd_solver='arpack')
     sc.pp.neighbors(adata, n_neighbors=10, n_pcs=40)
     sc.tl.leiden(adata)
     return list(adata.obs['leiden'])
 
-leiden_list = []
-for i,adata in enumerate(adata_list):
+from concurrent.futures import ThreadPoolExecutor
+with ThreadPoolExecutor(max_workers=38) as pool:
+    args = adata_list
+    results = list(pool.map(calculate_leiden_clusters, args))
+torch.save(results,"/home/xuguang/scEMD/data/results.pth")
+print("saved_results")
+
+leiden_lists = []
+for i,leiden_list in enumerate(results):
     print(i)
-    leiden_list = leiden_list + calculate_leiden_clusters(adata)
+    leiden_lists = leiden_lists + leiden_list
 print(outer.shape[0])
-print(len(leiden_list))
+print(len(leiden_lists))
+torch.save(leiden_lists,"/home/xuguang/scEMD/data/leiden_lists.pth")
 
-outer.obs['leiden'] = leiden_list
+outer.obs = outer.obs.dropna(axis=1, how='any')
+outer.obs['leiden'] = leiden_lists
 
-outer.write("/home/xuguang/scEMD/data/adata_For_Pretrain.h5ad")
+outer.write_h5ad("/home/xuguang/scEMD/data/adata_For_Pretrain_inner.h5ad")

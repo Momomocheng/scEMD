@@ -174,9 +174,7 @@ for i in range(1, EPOCHS+1):
             model.to(device)
         epoch_loss = running_loss / index
     #save model
-    if not os.path.exists(file_path + model_name):
-        os.mkdir(file_path + model_name)
-        output_path = file_path + model_name + "/ep%d" % i + f"gene_accuracy_{gene_accuracy:.4f}" + ".pth"
+    output_path = file_path + model_name + "/ep%d" % i + f"gene_accuracy_{gene_accuracy:.4f}" + ".pth"
     torch.save(model.cpu(),output_path)
     model.to(device)
 

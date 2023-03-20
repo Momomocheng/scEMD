@@ -1,0 +1,30 @@
+<div id="module2" class="module">
+    <h2>模型微调模块</h2>
+
+    <input type="file" id="fileUpload" />
+    <button id="uploadBtn">上传微调数据集</button>
+    <p>
+        <form id="finetuneForm">
+            <div class="mb-3">
+                <label for="epoch" class="form-label">Epoch</label>
+                <input type="number" class="form-control" id="epoch" name="epoch" value="50">
+            </div>
+            <div class="mb-3">
+                <label for="batchsize" class="form-label">Batch Size</label>
+                <input type="number" class="form-control" id="batchsize" name="batchsize" value="8">
+            </div>
+            <div class="mb-3">
+                <label for="use_GPU" class="form-label">Use GPU</label>
+                <select class="form-select" id="use_GPU" name="use_GPU">
+                    <option value="True" selected>True</option>
+                    <option value="False">False</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="learning_rate" class="form-label">Learning Rate</label>
+                <input type="number" class="form-control" id="learning_rate" name="learning_rate" value="0.001" step="0.0001">
+            </div>
+            <button type="submit" class="btn btn-primary">Finetune</button>
+        </form>
+    </p>
+</div>

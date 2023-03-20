@@ -70,9 +70,9 @@ model_name = args.model_name
 file_path = args.file_path
 
 # os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"[Info]: Use {device} now!")
-# device = torch.device("cpu")
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# print(f"[Info]: Use {device} now!")
+device = torch.device("cpu")
 
 # dataset = scDataset()
 # 定义划分比例
@@ -142,7 +142,9 @@ for i in range(1, EPOCHS+1):
     model.train()
     running_loss = 0.0
     epoch_loss = 0.0
+    gene_accuracys = 0
     for index, data in enumerate(train_loader):
+        torch.cuda.empty_cache()
         index += 1
         gene_indexs, gene_exprs, cell_lables, pad_index = data
         gene_indexs, gene_exprs, cell_lables, pad_index = gene_indexs.to(device), gene_exprs.to(device), cell_lables.to(device), pad_index.to(device)
@@ -163,18 +165,21 @@ for i in range(1, EPOCHS+1):
         optimizer.zero_grad()
 
         running_loss += loss.item()
+        gene_accuracys += gene_accuracy
 
         if cell_logits.shape[1] == len(dataset.lable_dict):
             live.update(f"EPOCH:{i}/{EPOCHS}, batch:{index}:\n epoch_loss:{epoch_loss:.4f}, loss:{loss:.4f}\n gene_accuracy:{gene_accuracy:.4f}, gene_loss:{gene_loss:.4f} \n cell_accuracy:{cell_accuracy:.4f}, cell_loss:{cell_loss:.4f}")
         else:
             live.update(f"EPOCH:{i}/{EPOCHS}, batch:{index}:\n epoch_loss:{epoch_loss:.4f}, loss:{loss:.4f}\n gene_accuracy:{gene_accuracy:.4f}, gene_loss:{gene_loss:.4f} \n cell_accuracy:none, cell_loss:{cell_loss:.4f}")
-        if index % 5000 == 0:
-            output_path = file_path + model_name + "/ep%d" % i + f"gene_accuracy_{gene_accuracy:.4f}" + ".pth"
+        if index % 50000 == 0:
+            if not os.path.exists(file_path + model_name):
+                os.mkdir(file_path + model_name)
+            output_path = file_path + model_name + "/ep%d" % i + f"gene_accuracy_{gene_accuracys/index:.4f}" + ".pth"
             torch.save(model.cpu(),output_path)
             model.to(device)
         epoch_loss = running_loss / index
     #save model
-    output_path = file_path + model_name + "/ep%d" % i + f"gene_accuracy_{gene_accuracy:.4f}" + ".pth"
+    output_path = file_path + model_name + "/ep%d" % i + f"gene_accuracy_{gene_accuracys/index:.4f}" + ".pth"
     torch.save(model.cpu(),output_path)
     model.to(device)
 

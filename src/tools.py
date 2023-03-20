@@ -2,6 +2,11 @@ from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LambdaLR
 import torch
 import math
+import scanpy as sc
+import scipy.sparse as sp
+import anndata
+import numpy as np
+import pandas as pd
 
 def get_cosine_schedule_with_warmup(
         optimizer: Optimizer,
@@ -88,3 +93,45 @@ class NpairLoss(nn.Module):
 
         loss = loss_ce + self.l2_reg*l2_loss*0.25
         return loss
+
+def convert_adata_genes(adata_src, adata_target):
+    """
+    将adata_src 在基因上向adata_target对齐, 缺失部分使用0填充
+    Parameters
+    ----------
+    adata_src : anndata.AnnData
+        Source annotated data matrix.
+    adata_target : anndata.AnnData
+        Target annotated data matrix.
+
+    Returns
+    -------
+    anndata.AnnData
+        Source annotated data matrix with gene names matching those of the target matrix.
+    """
+    # 获取目标数据集的基因名称
+    target_genes = adata_target.var_names
+    # 获取源数据集的基因名称
+    src_genes = adata_src.var_names
+    # 找到源数据集和目标数据集中共有的基因
+    common_genes = np.intersect1d(src_genes, target_genes)
+    # 找到目标数据集中有但是源数据集中没有的基因
+    diff_genes = np.array(list(set(target_genes) - set(common_genes)))
+    # 创建一个全为0的稀疏矩阵
+    n_cells = adata_src.n_obs
+    n_genes = len(diff_genes)
+    zero_X = sp.csr_matrix((n_cells, n_genes), dtype=np.float32)
+    # 按列拼接稀疏矩阵
+    new_X = sp.hstack([adata_src[:, common_genes].X, zero_X])
+    # 获取新的基因名称
+    new_genes = np.concatenate([common_genes, diff_genes])
+    # 创建一个新的 AnnData 对象
+    obs = adata_src.obs.copy()
+    var = pd.DataFrame(index = new_genes)
+    layers = {"counts": new_X}
+    adata_new = anndata.AnnData(new_X, obs, var, layers=layers)
+    adata_new = adata_new[:,target_genes]
+    myarray = adata_new.X.toarray()
+    X = sp.csr_matrix(myarray)
+    adata_new = anndata.AnnData(X, obs, pd.DataFrame(index = target_genes), layers=layers)
+    return adata_new

@@ -49,13 +49,16 @@ def make_counter():
 
 
 class scDataset(Dataset):
-    def __init__(self, datadir = None):
+    def __init__(self, datadir = None, adata = None):
         super(scDataset, self).__init__()
         if datadir is not None:
             self.datadir = datadir
         else:
             self.datadir = "/home/xuguang/scEMD/data_backup/Seurat3_ntiss10x.anno.h5ad"
-        self.adata = sc.read_h5ad(self.datadir)
+        if adata is not None:
+            self.adata = adata
+        else:
+            self.adata = sc.read_h5ad(self.datadir)
         # self.adata = read_all_adata()
         self.length = self.adata.shape[0]
         self.vocab_size = self.adata.shape[1]
@@ -63,6 +66,8 @@ class scDataset(Dataset):
         self.padding_value = len(self.gene_list) + 1
         if 'cell_type' in self.adata.obs.columns:
             self.lable_dict, self.lables = np.unique(np.array(self.adata.obs['cell_type']), return_inverse=True)
+        elif 'cell_type_combine' in self.adata.obs.columns:
+            self.lable_dict, self.lables = np.unique(np.array(self.adata.obs['cell_type_combine']), return_inverse=True)
         else: 
             self.lables = np.array(self.adata.obs['leiden'],dtype=int)
             self.lable_dict = list(range(57))

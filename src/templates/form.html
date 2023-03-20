@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Deep Learning Algorithm Demo</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="my-4 text-center">Deep Learning Algorithm Demo</h1>
+      <form method="post" action="/" class="p-3 border rounded">
+        <div class="form-group">
+          <label for="input_data">Input Data:</label>
+          <textarea name="input_data" id="input_data" cols="30" rows="1" class="form-control"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="model_choice">Model Choice:</label>
+          <select name="model_choice" id="model_choice" class="form-control">
+            <option value="model1">Model 1</option>
+            <option value="model2">Model 2</option>
+            <option value="model3">Model 3</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="training_epochs">Training Epochs:</label>
+          <input type="number" name="training_epochs" id="training_epochs" value="10" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="learning_rate">Learning Rate:</label>
+          <input type="number" name="learning_rate" id="learning_rate" value="0.01" step="0.001" class="form-control">
+        </div>
+        <button type="submit" class="btn btn-primary">Run Algorithm</button>
+      </form>
+      
+      <form id="upload-form" action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <button type="button" id="upload-button">Upload</button>
+      </form>
+      <div id="message" style="display: none;"></div>
+
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script> -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    <script>
+      $(function() {
+          $('#upload-button').click(function() {
+              var formData = new FormData($('#upload-form')[0]);
+              
+              $.ajax({
+                  url: $('#upload-form').attr('action'),
+                  type: 'POST',
+                  data: formData,
+                  processData: false,
+                  contentType: false,
+                  success: function(response) {
+                      if (response.success) {
+                          $('#message').html(response.message).fadeIn('slow');
+                      } else {
+                          $('#message').html(response.message).fadeIn('slow');
+                      }
+                  },
+                  error: function() {
+                      $('#message').html('An error occurred.').fadeIn('slow');
+                  }
+              });
+          });
+      });
+      </script>
+  </body>
+</html>

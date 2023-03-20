@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <div class="tab-pane fade show active" id="v-pills-module1" role="tabpanel" aria-labelledby="v-pills-module1-tab">
+        {% include 'module1.html' %}
+    </div>
+    <div class="tab-pane fade" id="v-pills-module2" role="tabpanel" aria-labelledby="v-pills-module2-tab">
+        {% include 'module2.html' %}
+    </div>
+    <div class="tab-pane fade" id="v-pills-module3" role="tabpanel" aria-labelledby="v-pills-module3-tab">
+        {% include 'module3.html' %}
+    </div>
+{% endblock %}

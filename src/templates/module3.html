@@ -1,0 +1,28 @@
+<div id="module3" class="module">
+    <h2>细胞类型预测模块</h2>
+    <p>
+        <form id="predictForm">
+            <div class="mb-3">
+                <label for="batchsize" class="form-label">Batch Size</label>
+                <input type="number" class="form-control" id="batchsize" name="batchsize" value="8">
+            </div>
+            <div class="mb-3">
+                <label for="use_GPU" class="form-label">Use GPU</label>
+                <select class="form-select" id="use_GPU" name="use_GPU">
+                    <option value="True" selected>True</option>
+                    <option value="False">False</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Predict</button>
+        </form>
+    
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <img id="image1" src="static/images/Prediction.png" alt="图片1" style="display:block; width: 100%;" />
+            </div>
+            <div class="col-md-12">
+                <img id="image2" src="#" alt="图片2" style="display:none; width: 100%;" />
+            </div>
+        </div>
+    </p>
+</div>
